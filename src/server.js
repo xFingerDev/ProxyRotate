@@ -8,7 +8,7 @@ import { sendWebHook } from "./webhook/send.js";
 let proxyIndex = 0;
 
 let processedProxies = process(PROXIES);
-let maxAttempts = Math.min(processedProxies.length, 5);
+let maxAttempts = processedProxies.length;
 
 function getNextProxy() {
   if (processedProxies.length === 0) return null;
