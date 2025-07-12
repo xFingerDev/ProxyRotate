@@ -8,7 +8,7 @@ export async function middlewareProxySocks(proxy, req, clientSocket, err) {
       proxy: {
         host: proxy.host,
         port: proxy.port,
-        type: 5, //TODO: HANDLE MORE SOCKS METHODS
+        type: Number(proxy.protocol.replace("proxy", "")),
         userId: proxy.username,
         password: proxy.password,
       },

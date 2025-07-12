@@ -9,5 +9,5 @@ export async function middlewareProxy(proxy, req, clientSocket, err) {
     return await middlewareProxySocks(proxy, req, clientSocket, err);
   }
 
-  return clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+  return clientSocket.end("HTTP/1.1 505 Bad Gateway\r\n\r\n");
 }

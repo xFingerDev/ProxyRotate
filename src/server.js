@@ -35,7 +35,7 @@ export function loadServer(port) {
           attempts++;
           runProxy();
         } else if (err) {
-          clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+          clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
         }
       });
     }
