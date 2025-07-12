@@ -1,0 +1,15 @@
+services:
+  proxy_rotate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proxy_rotate
+    restart: always
+    env_file: stack.env
+    #ports:
+    #  - "3121:3121"
+    networks:
+      - portainer_network
+networks:
+  portainer_network:
+    external: true
