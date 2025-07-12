@@ -4,6 +4,7 @@ import { PROXIES } from "./config.js";
 import { validateAuth } from "./auth/validate.js";
 import { middlewareProxy } from "./middleware.js";
 import { process } from "./proxy/process.js";
+import { sendWebHook } from "./webhook/send.js";
 let proxyIndex = 0;
 
 let processedProxies = process(PROXIES);
@@ -35,6 +36,7 @@ export function loadServer(port) {
           attempts++;
           runProxy();
         } else if (err) {
+          sendWebHook(err.message);
           clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
         }
       });
