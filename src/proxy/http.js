@@ -16,7 +16,7 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
 
     timer = setTimeout(function () {
       clientSocket.end();
-    }, 5000);
+    }, 10000);
 
     proxySocket.on("error", (e) => {
       clearTimeout(timer);
