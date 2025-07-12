@@ -61,7 +61,6 @@ server.on("connect", async (req, clientSocket, head) => {
   }
 
   const proxy = getNextProxy();
-
   if (!proxy) {
     clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
     return;
@@ -94,26 +93,52 @@ server.on("connect", async (req, clientSocket, head) => {
       clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
     });
   } else if (proxy.protocol === "socks5") {
-    try {
-      const { socket: proxySocket } = await SocksClient.createConnection({
-        command: "connect",
-        proxy: {
-          host: proxy.host,
-          port: proxy.port,
-          type: 5, //TODO: HANDLE MORE SOCKS METHODS
-          userId: proxy.username,
-          password: proxy.password,
-        },
-        destination: {
-          host: targetHost,
-          port: parseInt(targetPort),
-        },
-      });
+    let socksError = false;
+    let attemptCount = 0;
+    let maxAttempts = processedProxies.length;
+    let proxySocket = null;
 
+    while (attemptCount < maxAttempts) {
+      try {
+        const currentProxy = getNextProxy();
+        if (!currentProxy) break;
+        const { socket } = await SocksClient.createConnection({
+          command: "connect",
+          proxy: {
+            host: currentProxy.host,
+            port: currentProxy.port,
+            type: 5,
+            userId: currentProxy.username,
+            password: currentProxy.password,
+          },
+          destination: {
+            host: targetHost,
+            port: parseInt(targetPort),
+          },
+        });
+        proxySocket = socket;
+        socksError = false;
+        break;
+      } catch (err) {
+        if (
+          err.message &&
+          err.message.includes("Socks5 Authentication failed")
+        ) {
+          socksError = true;
+          attemptCount++;
+          continue;
+        } else {
+          clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+          return;
+        }
+      }
+    }
+
+    if (proxySocket && !socksError) {
       clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
       clientSocket.pipe(proxySocket);
       proxySocket.pipe(clientSocket);
-    } catch (err) {
+    } else {
       clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
     }
   } else {
