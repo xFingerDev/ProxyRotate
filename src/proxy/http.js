@@ -23,15 +23,9 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
       err(e);
     });
     proxySocket.once("data", (chunk) => {
-      if (chunk.toString().includes("200")) {
-        clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
-        clientSocket.pipe(proxySocket);
-        proxySocket.pipe(clientSocket);
-      } else {
-        clientSocket.write(responseBuffer);
-        clientSocket.end();
-        proxySocket.end();
-      }
+      clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+      clientSocket.pipe(proxySocket);
+      proxySocket.pipe(clientSocket);
     });
   } catch (e) {
     err(e);
