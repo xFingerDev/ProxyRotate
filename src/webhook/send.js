@@ -17,5 +17,5 @@ export function sendWebHook(err) {
         ],
         attachments: [],
       }),
-    });
+    }).catch((err) => {});
 }

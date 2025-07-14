@@ -31,16 +31,25 @@ export function loadServer(port) {
         clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
         return;
       }
-      middlewareProxy(proxy, req, clientSocket, (err) => {
-        sendWebHook(`${err.message} | ${proxy.protocol}:${proxy.host}`);
+      try {
+        middlewareProxy(proxy, req, clientSocket, (err) => {
+          sendWebHook(
+            `${attempts} - ${err.message} | ${proxy.protocol}:${proxy.host}`
+          );
 
-        if (err && attempts < maxAttempts) {
-          attempts++;
-          runProxy();
-        } else if (err) {
-          clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
-        }
-      });
+          if (err && attempts < maxAttempts) {
+            attempts++;
+            runProxy();
+          } else if (err) {
+            clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
+          }
+        });
+      } catch (err) {
+        sendWebHook(
+          `[CATCH] - ${attempts} - ${err.message} | ${proxy.protocol}:${proxy.host}`
+        );
+        runProxy();
+      }
     }
 
     runProxy();
