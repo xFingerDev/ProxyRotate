@@ -25,16 +25,17 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
       err(e);
     });
     proxySocket.once("data", (chunk) => {
-      const response = chunk.toString();
-      if (response.includes("200 Connection Established")) {
+      const result = chunk.toString();
+      if (result.includes("200")) {
         clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
         clientSocket.pipe(proxySocket);
         proxySocket.pipe(clientSocket);
       } else {
-        //  clientSocket.end();
+        //clientSocket.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
         proxySocket.end();
-        err("No proxy works");
+        err(result);
       }
+      clearTimeout(timer);
     });
   } catch (e) {
     err(e);

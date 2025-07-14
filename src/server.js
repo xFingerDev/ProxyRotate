@@ -34,7 +34,9 @@ export function loadServer(port) {
       try {
         middlewareProxy(proxy, req, clientSocket, (err) => {
           sendWebHook(
-            `${attempts} - ${err.message} | ${proxy.protocol}:${proxy.host}`
+            `${attempts} - ${err?.message ?? err} | ${proxy.protocol}:${
+              proxy.host
+            }`
           );
 
           if (err && attempts < maxAttempts) {
@@ -46,7 +48,9 @@ export function loadServer(port) {
         });
       } catch (err) {
         sendWebHook(
-          `[CATCH] - ${attempts} - ${err.message} | ${proxy.protocol}:${proxy.host}`
+          `[CATCH] - ${attempts} - ${err?.message ?? err} | ${proxy.protocol}:${
+            proxy.host
+          }`
         );
         if (err && attempts < maxAttempts) {
           attempts++;
