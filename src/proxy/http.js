@@ -15,7 +15,9 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
     });
 
     timer = setTimeout(function () {
-      clientSocket.end();
+      err("No proxy works");
+
+      //clientSocket.end();
     }, 10000);
 
     proxySocket.on("error", (e) => {
@@ -23,9 +25,16 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
       err(e);
     });
     proxySocket.once("data", (chunk) => {
-      clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
-      clientSocket.pipe(proxySocket);
-      proxySocket.pipe(clientSocket);
+      const response = chunk.toString();
+      if (response.includes("200 Connection Established")) {
+        clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+        clientSocket.pipe(proxySocket);
+        proxySocket.pipe(clientSocket);
+      } else {
+        //  clientSocket.end();
+        proxySocket.end();
+        err("No proxy works");
+      }
     });
   } catch (e) {
     err(e);
