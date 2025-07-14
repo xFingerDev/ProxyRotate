@@ -19,6 +19,9 @@ export async function middlewareProxySocks(proxy, req, clientSocket, err) {
     });
 
     proxySocket.on("error", err);
+    clientSocket.on("close", () => {
+      setTimeout(() => proxySocket.destroy(), 500);
+    });
     clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
     clientSocket.pipe(proxySocket);
     proxySocket.pipe(clientSocket);
