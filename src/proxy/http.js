@@ -22,10 +22,20 @@ export async function middlewareProxyHttp(proxy, req, clientSocket, err) {
       clearTimeout(timer);
       err(e);
     });
-    proxySocket.once("data", () => {
-      clientSocket.pipe(proxySocket);
-      proxySocket.pipe(clientSocket);
-      clearTimeout(timer);
+    let responseBuffer = "";
+    proxySocket.on("data", (chunk) => {
+      responseBuffer += chunk.toString();
+      if (responseBuffer.indexOf("\r\n\r\n") !== -1) {
+        // Headers received, check for 200 Connection established
+        if (/^HTTP\/1\.\d 200/.test(responseBuffer)) {
+          clientSocket.pipe(proxySocket);
+          proxySocket.pipe(clientSocket);
+        } else {
+          clientSocket.end();
+        }
+        clearTimeout(timer);
+        proxySocket.removeAllListeners("data");
+      }
     });
   } catch (e) {
     err(e);
