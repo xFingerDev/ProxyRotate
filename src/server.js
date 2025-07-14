@@ -48,7 +48,12 @@ export function loadServer(port) {
         sendWebHook(
           `[CATCH] - ${attempts} - ${err.message} | ${proxy.protocol}:${proxy.host}`
         );
-        runProxy();
+        if (err && attempts < maxAttempts) {
+          attempts++;
+          runProxy();
+        } else if (err) {
+          clientSocket.end("HTTP/1.1 503 No Proxies Available\r\n\r\n");
+        }
       }
     }
 
