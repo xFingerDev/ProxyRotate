@@ -10,10 +10,31 @@ let proxyIndex = 0;
 let processedProxies = process(PROXIES);
 let maxAttempts = processedProxies.length;
 
+const proxyErrorMap = new Map();
+
 function getNextProxy() {
   if (processedProxies.length === 0) return null;
-  proxyIndex = (proxyIndex + 1) % processedProxies.length;
-  return processedProxies[proxyIndex];
+
+  const now = Date.now();
+  let attempts = 0;
+
+  while (attempts < processedProxies.length) {
+    proxyIndex = (proxyIndex + 1) % processedProxies.length;
+    const proxy = processedProxies[proxyIndex];
+    const key = `${proxy.protocol}:${proxy.host}:${proxy.port}:${proxy.username}:${proxy.password}`;
+
+    const errorTime = proxyErrorMap.get(key);
+    if (!errorTime || now - errorTime > 30 * 60 * 1000) {
+      return proxy;
+    }
+    attempts++;
+  }
+  return null;
+}
+
+function markProxyError(proxy) {
+  const key = `${proxy.protocol}:${proxy.host}:${proxy.port}:${proxy.username}:${proxy.password}`;
+  proxyErrorMap.set(key, Date.now());
 }
 
 export function loadServer(port) {
@@ -33,6 +54,7 @@ export function loadServer(port) {
       }
       try {
         middlewareProxy(proxy, req, clientSocket, (err) => {
+          markProxyError(proxy);
           sendWebHook(
             `${attempts} - ${err?.message ?? err} | ${proxy.protocol}:${
               proxy.host
@@ -47,6 +69,7 @@ export function loadServer(port) {
           }
         });
       } catch (err) {
+        markProxyError(proxy);
         sendWebHook(
           `[CATCH] - ${attempts} - ${err?.message ?? err} | ${proxy.protocol}:${
             proxy.host
