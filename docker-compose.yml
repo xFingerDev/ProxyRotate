@@ -1,5 +1,7 @@
 services:
   proxy_rotate:
+    logging:
+      driver: "none"
     build:
       context: .
       dockerfile: Dockerfile
